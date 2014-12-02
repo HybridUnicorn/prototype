@@ -18,8 +18,6 @@ window.mainState =
 		]
 			game.load.image(sprite, "assets/sprites/#{sprite}.png")
 
-		game.time.advancedTiming = true
-
 
 	create: ->
 
@@ -36,6 +34,8 @@ window.mainState =
 		@player.body.gravity.y = 980
 		@player.anchor.setTo 0.5, 0.5
 		@player.tint = TINT_BEG
+		@player.checkWorldBounds = true
+		@player.events.onOutOfBounds.add(this.die, this)
 		@cursor = game.input.keyboard.createCursorKeys()
 		game.camera.follow @player
 
@@ -87,10 +87,6 @@ window.mainState =
 		game.physics.arcade.overlap @player, @peaks, @die, null, this
 		@movePlayer()
 		@spots.update()
-
-
-	render: ->
-		game.debug.text game.time.fps or "--", 2, 14, "#00ff00"
 
 
 	movePlayer: ->
