@@ -28,12 +28,15 @@ class window.Spot
 
 		@spot = new spots[@index]
 
+	showSpot: ->
+		null
+
 
 class window.Ring
 	constructor: ->
-		@max_width = 60
-		@player_width = @max_width
-		@mouse_radius = 0
+		@max_width = 50
+		@player_radius = @max_width
+		@mouse_radius = 20
 
 		@player_spot = game.add.graphics(0, 0)
 		@player_ghost = game.add.graphics(0, 0)
@@ -41,10 +44,10 @@ class window.Ring
 		@mouse_spot = game.add.graphics(0, 0)
 		@mouse_ghost = game.add.graphics(0, 0)
 
-		this.init(@player_spot)
-		this.init(@player_ghost)
-		this.init(@mouse_spot)
-		this.init(@mouse_ghost)
+		this.init(@player_spot, @player_radius)
+		this.init(@player_ghost, @player_radius)
+		this.init(@mouse_spot, @mouse_radius)
+		this.init(@mouse_ghost, @mouse_radius)
 
 		@mouse_spot.scale = @mouse_ghost.scale =
 			x: 0
@@ -52,44 +55,55 @@ class window.Ring
 
 		@mouse_spot.fixedToCamera = @mouse_ghost.fixedToCamera = true
 
-	init: (graphic) ->
+		game.input.onDown.add(this.showSpot, this)
+		game.input.onUp.add(this.hideSpot, this)
+
+		@shake = false
+
+	init: (graphic, radius) ->
 		graphic.beginFill(0xffffff)
-		graphic.drawCircle(0, 0, @max_width)
+		graphic.drawCircle(0, 0, radius)
 
 
 	update: ->
 		if game.input.mousePointer.isDown
-			if @player_width > 0
-				@player_width -= 1.5
+			if @player_radius > 0
+				@player_radius -= 0.3
 
-				#this.mouse_radius += 2
-				delta = (@player_width / @max_width)
-				oppos = 1 - delta
+				@shake = (@player_radius < 30)
+
+				delta = (@player_radius / @max_width)
 				@player_spot.scale = @player_ghost.scale =
 					x: delta
 					y: delta
 
-				@mouse_spot.scale = @mouse_ghost.scale =
-					x: oppos
-					y: oppos
 		else
-			if @player_width < @max_width
-				@player_width += 1.5
-				delta = (@player_width / @max_width)
-				oppos = 1 - delta
+			if @player_radius < @max_width
+				@player_radius += 0.3
+				delta = (@player_radius / @max_width)
 				@player_spot.scale = @player_ghost.scale =
 					x: delta
 					y: delta
 
-				@mouse_spot.scale = @mouse_ghost.scale =
-					x: oppos
-					y: oppos
 
 		@player_spot.x = @player_ghost.x = @player.x
 		@player_spot.y = @player_ghost.y = @player.y
 
-		@mouse_spot.cameraOffset.setTo(game.input.x, game.input.y)
-		@mouse_ghost.cameraOffset.setTo(game.input.x, game.input.y)
+		px = game.input.x
+		py = game.input.y
+
+		if @shake
+			px += 1 * Phaser.Math.randomSign()
+			py += 1 * Phaser.Math.randomSign()
+
+		@mouse_spot.cameraOffset.setTo(px, py)
+		@mouse_ghost.cameraOffset.setTo(px, py)
+
+	showSpot: ->
+		game.add.tween(@mouse_spot.scale).to({x: 1, y: 1}, 100).start()
+
+	hideSpot: ->
+		game.add.tween(@mouse_spot.scale).to({x: 0, y: 0}, 100).start()
 
 
 class window.Column
